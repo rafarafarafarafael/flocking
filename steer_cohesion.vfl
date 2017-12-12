@@ -18,12 +18,12 @@ int neighpt;
 
 while(pciterate(handle)){
     pcimport(handle, "point.number", neighpt);
-    if(neighpt != @ptnum){
-        pcimport(handle, "P", neighp);
-        steer += neighp;
-        distscale = fit(length(disp), mindist, maxdist, 0, 1);
-    }
+    if(neighpt == @ptnum)
+        continue; 
+    pcimport(handle, "P", neighp);
+    steer += neighp;
 }
+
 steer /= pcnumfound(handle);
 steer *= priority * forcescale * scale;
 
