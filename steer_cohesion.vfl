@@ -1,0 +1,34 @@
+// parameter interface
+int maxpts = chi("max_points");
+float rad = ch("radius");
+float priority = ch("priority");
+vector scale = chv("scale");
+float forcescale = ch("force_scale");
+float mindist = ch("min_distance");
+float maxdist = ch("max_distance");
+
+// initial variables
+vector steer = set(0, 0, 0);
+int handle = pcopen(0, "P", @P, rad, maxpts);
+
+// neighbourhood lookup loop
+while(pciterate(handle)){
+    vector neighp;
+    int neighpt;
+    pcimport(handle, "P", neighp);
+    pcimport(handle, "point.number", neighpt);
+    if(neighpt != @ptnum){
+        vector disp = (neighp - @P);
+        float distscale = fit(length(disp), mindist, maxdist, 0, 1);
+        steer += disp * distscale * priority * forcescale * scale;
+    }
+}
+
+// steerforce attribute creation
+string steerforce = concat("steerforce", itoa(i@steercount));
+string steerpriority = concat("steerpriority", itoa(i@steercount));
+addpointattrib(0, steerforce, set(0, 0, 0));
+setpointattrib(0, steerforce, @ptnum, steer);
+addpointattrib(0, steerpriority, 0.0);
+setpointattrib(0, steerpriority, @ptnum, priority);
+i@steercount++;

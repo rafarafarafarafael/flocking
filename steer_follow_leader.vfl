@@ -1,0 +1,44 @@
+// parameter interface
+float dec_rad = ch("deccel_radius");
+float s_rad = ch("search_radius");
+int max_pts = chi("max_points");
+float force_scale = ch("force_scale");
+float priority = ch("priority");
+matrix xform = optransform(chs("bindgeoinput2"));
+int follow_mode = chi("follow_mode");
+
+// follow mode definition
+vector arrival_target = set(0, 0, 0);
+int handle = pcopen(1, "P", @P, s_rad, max_pts);
+if(follow_mode == 0){// nearest leader
+    float dist = -1.0;
+    while(pciterate(handle)){
+        vector leaderP;
+        pcimport(handle, "P", leaderP);
+        if(dist < 0 || dist > distance(@P, leaderP)){
+            dist = distance(@P, leaderP);
+            arrival_target = leaderP;
+        }
+    }
+}
+if(follow_mode == 1){// average pos
+    arrival_target = pcfilter(handle, "P");
+}
+if(follow_mode == 2){// individual leader
+    arrival_target = point(1, "P", @id % npoints(1));
+}
+// steering caclulation
+arrival_target *= xform;
+vector disp = arrival_target - @P;
+float distscale = clamp(length(disp) / dec_rad, 0, 1);
+vector steer = (disp - @v) * distscale;
+steer = normalize(steer) * clamp(length(steer), 0, 1) * force_scale;
+
+// steerforce attribute creation
+string steerforce = concat("steerforce", itoa(i@steercount));
+string steerpriority = concat("steerpriority", itoa(i@steercount));
+addpointattrib(0, steerforce, set(0, 0, 0));
+setpointattrib(0, steerforce, @ptnum, steer);
+addpointattrib(0, steerpriority, 0.0);
+setpointattrib(0, steerpriority, @ptnum, priority);
+i@steercount++;

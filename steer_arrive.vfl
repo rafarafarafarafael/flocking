@@ -1,0 +1,26 @@
+// parameter interface
+float rad = ch("deccel_radius");
+float force_scale = ch("force_scale");
+float priority = ch("priority");
+vector loc = chv("location");
+int use_loc = chi("use_location");
+
+// steering caclulation
+if(use_loc == 0){
+    // point to follow transformed to world space
+    loc = set(0, 0, 0) * optransform(chs("bindgeoinput2"));
+}
+vector arrival_target = loc;
+vector disp = arrival_target - @P;
+float dist_scale = clamp(length(disp) / rad, 0, 1);
+vector steer = (disp - @v) * dist_scale;
+steer = normalize(steer) * clamp(length(steer), 0, 1) * force_scale;
+
+// steerforce attribute creation
+string steerforce = concat("steerforce", itoa(i@steercount));
+string steerpriority = concat("steerpriority", itoa(i@steercount));
+addpointattrib(0, steerforce, set(0, 0, 0));
+setpointattrib(0, steerforce, @ptnum, steer);
+addpointattrib(0, steerpriority, 0.0);
+setpointattrib(0, steerpriority, @ptnum, priority);
+i@steercount++;

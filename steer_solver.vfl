@@ -1,0 +1,30 @@
+// parameter interface
+float minvel = ch("min_vel");
+float maxvel = ch("max_vel");
+float maxturn = ch("max_turn");
+
+// initialize variables
+vector steer = set(0, 0, 0);
+
+// simple mind
+for(int i = 0; i < i@steercount; i++){
+    string steerforce = concat("steerforce", itoa(i));
+    string steerpriority = concat("steerpriority", itoa(i));
+    vector tempforce = point(0, steerforce, @ptnum);
+    float temppriority = point(0, steerpriority, @ptnum);
+    steer += tempforce * temppriority;
+}
+
+// enforce max turn
+vector oldvel = @v;
+@v += steer;
+
+float nextturn = acos(dot(normalize(oldvel), normalize(@v)));
+if(nextturn > radians(maxturn)){
+    matrix rot = ident();
+    vector axis = normalize(cross(oldvel, @v));
+    rotate(rot, radians(maxturn), axis);
+    @v = normalize(oldvel) * rot * length(@v);
+}
+
+@v = normalize(@v) * fit01(rand(@id), minvel, maxvel);

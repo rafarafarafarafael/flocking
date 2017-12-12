@@ -1,0 +1,45 @@
+// parameter interface
+float mindist = ch("min_distance");
+float maxdist = ch("max_distance");
+float priority = ch("priority");
+float forcescale = ch("force_scale");
+int vis = chi("visualise_intersection");
+
+// initial variables
+vector primpos = set(0, 0, 0);
+vector primuvw = set(0, 0, 0);
+matrix xform = optransform(chs("bindgeoinput2"));
+vector transP = @P * invert(xform);
+vector steer = set(0, 0, 0);
+
+// intersection test
+if(vis == 1){
+    addpointattrib(0, "see_obstacle", 0.0);
+}
+vector intray = normalize(@v) * fit01(rand(@id), mindist, maxdist) * (1/cracktransform(0, 0, 2, {0, 0, 0}, xform));
+int primnum = intersect(1, transP, intray, primpos, primuvw);
+
+if(primnum >= 0){
+    float dirtest = dot(normalize(intray),normalize(prim_normal(1, primnum, primuvw)));
+    if(dirtest <= 0){
+        vector refl = reflect(intray, prim_normal(1, primnum, primuvw));
+        steer = forcescale * (refl - intray) * fit(distance(transP, primpos), mindist, maxdist, 1, 0);
+        if(vis == 1){
+            setpointattrib(0, "see_obstacle", @ptnum, fit(distance(transP, primpos), mindist, maxdist, 0, 1));
+        }
+    }
+} else {
+    if(hasattrib(0, "point", "see_obstacle")){
+        setpointattrib(0, "see_obstacle", @ptnum, 0.0);
+    }
+}
+
+
+// steerforce attribute creation
+string steerforce = concat("steerforce", itoa(i@steercount));
+string steerpriority = concat("steerpriority", itoa(i@steercount));
+addpointattrib(0, steerforce, set(0, 0, 0));
+setpointattrib(0, steerforce, @ptnum, steer);
+addpointattrib(0, steerpriority, 0.0);
+setpointattrib(0, steerpriority, @ptnum, priority);
+i@steercount++;
