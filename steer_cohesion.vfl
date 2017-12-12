@@ -12,17 +12,20 @@ vector steer = set(0, 0, 0);
 int handle = pcopen(0, "P", @P, rad, maxpts);
 
 // neighbourhood lookup loop
+vector neighp;
+float distscale;
+int neighpt;
+
 while(pciterate(handle)){
-    vector neighp;
-    int neighpt;
-    pcimport(handle, "P", neighp);
     pcimport(handle, "point.number", neighpt);
     if(neighpt != @ptnum){
-        vector disp = (neighp - @P);
-        float distscale = fit(length(disp), mindist, maxdist, 0, 1);
-        steer += disp * distscale * priority * forcescale * scale;
+        pcimport(handle, "P", neighp);
+        steer += neighp;
+        distscale = fit(length(disp), mindist, maxdist, 0, 1);
     }
 }
+steer /= pcnumfound(handle);
+steer *= priority * forcescale * scale;
 
 // steerforce attribute creation
 string steerforce = concat("steerforce", itoa(i@steercount));
