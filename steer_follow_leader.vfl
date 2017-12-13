@@ -6,14 +6,15 @@ float force_scale = ch("force_scale");
 float priority = ch("priority");
 matrix xform = optransform(chs("bindgeoinput2"));
 int follow_mode = chi("follow_mode");
+int use_dist = chi("used_distance_scale");
 
 // follow mode definition
 vector arrival_target = set(0, 0, 0);
 int handle = pcopen(1, "P", @P, s_rad, max_pts);
 if(follow_mode == 0){// nearest leader
     float dist = -1.0;
+    vector leaderP;
     while(pciterate(handle)){
-        vector leaderP;
         pcimport(handle, "P", leaderP);
         if(dist < 0 || dist > distance(@P, leaderP)){
             dist = distance(@P, leaderP);
@@ -30,8 +31,10 @@ if(follow_mode == 2){// individual leader
 // steering caclulation
 arrival_target *= xform;
 vector disp = arrival_target - @P;
-float distscale = clamp(length(disp) / dec_rad, 0, 1);
-vector steer = (disp - @v) * distscale;
+float dist_scale = clamp(length(disp) / dec_rad, 0, 1);
+vector steer = (disp - @v);
+if (use_dist == 1)
+    steer *= dist_scale;
 steer = normalize(steer) * clamp(length(steer), 0, 1) * force_scale;
 
 // steerforce attribute creation
