@@ -13,7 +13,6 @@ int handle = pcopen(0, "P", @P, rad, max_pts);
 
 // neighbourhood lookup loop
 vector neighp;
-float dist_scale
 int neighpt;
 
 while(pciterate(handle)){
@@ -25,7 +24,7 @@ while(pciterate(handle)){
 }
 
 steer /= pcnumfound(handle);
-dist_scale = fit(distance(steer, @P), min_dist, max_dist, 0, 1);
+float dist_scale = fit(distance(steer, @P), min_dist, max_dist, 0, 1);
 steer = (steer - @P) * priority * force_scale * scale * dist_scale;
 
 // steerforce attribute creation
